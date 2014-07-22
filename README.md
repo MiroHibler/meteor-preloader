@@ -197,6 +197,9 @@ $.ajaxSetup({
 
 ## Changelog
 
+### v0.1.3
+ * Bumped up version in `smart.js`
+
 ### v0.1.2
  * Fixed bug #2 - Not all the js files are loaded
  * Changes to the README.md
