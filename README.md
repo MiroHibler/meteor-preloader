@@ -78,7 +78,7 @@ preloadHandler: function ( filePath ) {	// current loaded library to be checked
 
 It also adds a method:
 
- * `preload` Method called in the `waitOn` method to load route-specific files; it takes two parameters:
+ * `preload` Method which will do the actual loading; should be called from within the `waitOn` method; it takes two parameters:
 
 ```javascript
 preload(
@@ -196,6 +196,10 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+
+### v0.1.2
+ * Fixed bug #2 - Not all the js files are loaded
+ * Changes to the README.md
 
 ### v0.1.1
  * Fixed bug: Empty 'default' parameter in preloadFiles throwing error
