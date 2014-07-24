@@ -197,6 +197,9 @@ $.ajaxSetup({
 
 ## Changelog
 
+### v0.2.0
+ * Cached status so libraries don't get loaded again for the same route (until full page reload, duh!)
+
 ### v0.1.3
  * Bumped up version in `smart.js`
 
