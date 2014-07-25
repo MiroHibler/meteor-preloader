@@ -197,6 +197,9 @@ $.ajaxSetup({
 
 ## Changelog
 
+### v0.2.2
+ * Fix for cached status of styles not being correctly set
+
 ### v0.2.1
  * Cached status so styles as well don't get loaded again for the same route (until full page reload, duh!)
 
