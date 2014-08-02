@@ -5,6 +5,15 @@
 Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
 
 
+## NEW VERSION - v0.3.0
+
+ * **Total rewrite**
+ 	- **changed the parameter structure!**
+ 	- **route controller's `preload` method has been deprecated!**
+ * Added Async loading for large libraries
+ * Now checking (across routes) for already loaded libraries to prevent re-loading
+
+
 ## Dependencies
 
  * [iron-router](https://github.com/EventedMind/iron-router) - _A client and server side router designed specifically for Meteor_.
@@ -14,10 +23,11 @@ Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
 
 _meteor-preloader_ extends the [iron-router](https://github.com/EventedMind/iron-router) with _**synchronous**_ external file loader - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files.
 
+**NEW in v0.3.0**: libraries can now be loaded _**asyncronously**_ as well in order to prevent blocking the page load!
 
 ## What?!
 
-Meteor [gathers](http://docs.meteor.com/#structuringyourapp) all JavaScript files in the application tree, with the exception of the _server_, _public_, and _private_ subdirectories, for the client. It minifies this bundle and serves it to each new client.
+[Meteor gathers](http://docs.meteor.com/#structuringyourapp) all JavaScript files in the application tree, with the exception of the _server_, _public_, and _private_ subdirectories, for the client. It minifies this bundle and serves it to each new client.
 
 That's fine for small (one-page) applications with a few (dozen) custom .js files, but when you're building a large, structured application that has many different screens, like a CMS application for example, things are getting more complicated.
 
@@ -29,11 +39,17 @@ To load such files, a usual approach is to use AJAX loader, for example jQuery's
 
 _meteor-preloader's_ main task is to fix that problem.
 
+_**Starting from v0.3.0**_, files now can be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
+
+A handler can be passed to _meteor-preloader_ to be invoked on _**each**_ file being (pre)loaded.
+
 
 ## How?
 (in case you were TL even for _TL;DR;_)
 
 _meteor-preloader_ extends the [iron-router](https://github.com/EventedMind/iron-router) with _**synchronous**_ external file loader - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files.
+
+**NEW in v0.3.0**: libraries can now be loaded _**asyncronously**_ as well in order to prevent blocking the page load!
 
 
 ## KEWL!
@@ -49,54 +65,101 @@ $ mrt add preloader
 
 _**NOTE:** **.css**_ files will be just appended to the `<head>` section which will cause their immediate loading.
 
-_meteor-preloader_ adds a couple of parameters to the (Iron) Router object:
- * `preloadFiles` The object containing two parameters - objects with their own parameters - lists of files to be (pre)loaded on each page, in the order they appear in the list
+_meteor-preloader_ adds one parameter to the (Iron) Router object:
+
+ * `preload` The object containing two parameters - objects with their own parameters - lists of files to be (pre)loaded on each page, in the order they appear in the list
 
 ```javascript
-preloadFiles: {	// parameters can be a string (file path) or an array of strings
-	// Use these on *ALL* pages
-	'common': {		// You can omit any of these objects...
-		js: [],
-		css: []
-	},
-	// Use these (on top of 'common') if no others are defined
-	// These can get overridden by each route's PreloadController
-	'default': {	// ...but omitting both won't make you any smarter.
-		js: [],
-		css: []
+Router.configure({
+	layoutTemplate	: 'layout',
+	loadingTemplate	: 'loading',
+	preload			: {	// parameters can be a string (file path) or an array of strings
+		'async': {	// List of files to be loaded asynchronously
+			// These will be loaded in the background (non-blocking!) once per full page reload
+			'js'		: '',	// a string (file path) or an array of strings
+			// (optional) User-defined method called on each _loaded_ library (_initialization_ is NOT guaranteed)
+			'handler'	: function ( error, result ) {
+					// Check if library finished initialization and have your way with it
+
+					// error:
+					{
+						file		: <full path of the file being loaded>,
+						jqxhr		: <jqxhr object returned from AJAX call>,
+						status		: <textual status returned from AJAX call>,
+						exception	: <exception object returned from AJAX call>,
+						counter		: <current file counter>,
+						totalFiles	: <total number of files being loaded>
+					}
+
+					// result:
+					{
+						file		: <full path of the file being loaded>,
+						script		: <file content returned from AJAX call>,
+						status		: <textual status returned from AJAX call>,
+						counter		: <current file counter>,
+						totalFiles	: <total number of files being loaded>
+					}
+				}
+		},
+	    'sync': {	// List of files to be loaded synchronously
+			'common': {		// You can omit any of these objects...
+				// Use these on *ALL* pages
+				'css'		: '',	// a string (file path) or an array of strings
+				'js'		: '',	// a string (file path) or an array of strings
+				// (optional) User-defined method called on each _loaded_ library to check whether it finished _initialization_
+				'handler'	: function ( filePath ) {
+					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+					// Check and return `true` if `file` finished initialization
+				}
+			},
+			'default': {	// ...but omitting both won't make you any smarter.
+				// Use these (on top of 'common') if no others are defined
+				// These can get overridden by each route's PreloadController
+				'css'		: '',	// a string (file path) or an array of strings
+				'js'		: '',	// a string (file path) or an array of strings
+				// (optional) User-defined method called on each _loaded_ library to check whether it finished _initialization_
+				'handler'	: function ( filePath ) {
+					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+					// Check and return `true` if `file` finished initialization
+				}
+			}
+		}
 	}
-}
+})
 ```
 
- * `preloadHandler` (optional) User-defined method called on each _loaded_ library to check whether it finished _initialization_
+It also adds similar parameter to the route controller:
 
 ```javascript
-preloadHandler: function ( filePath ) {	// current loaded library to be checked
-	// Check if library finished initialization
-}
+Router.map(function(){
+	this.route( 'home', {
+		path			: '/',
+		template		: 'main',
+		controller		: PreloadController,
+		/* * NOTE *
+		 |
+		 | Old implementation of calling a route controller method `preload()` within route's `waitOn` method is deprecated in v0.3+
+		 |
+		 | Libraries will now be automagically loaded within route's `waitOn` method
+		 |
+		 */
+		preload			: {	// Lists of files to load
+			// 'css		: [],		<-- If undefined, load the libraries defined in `Router.preload.sync.default.css`
+			'css'		: [],		//	<-- If '' or empty, DON'T load the libraries defined in `Router.preload.sync.default.css`
+			// 'js'		: [],		<-- If undefined, load the libraries defined in `Router.preload.sync.default.js`
+			'js'		: [],		//	<-- If '' or empty, DON'T load the libraries defined in `Router.preload.sync.default.js`
+			'handler'	: function ( filePath ) {
+				var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+				// Check and return `true` if `file` finished initialization
+			}
+		}
+	});
+});
 ```
 
-It also adds a method:
+**NOTE:** If both router- and route-specific handlers are defined, ALL will be called unless any of them returns `true`!
 
- * `preload` Method which will do the actual loading; should be called from within the `waitOn` method; it takes two parameters:
-
-```javascript
-preload(
-	{	// Lists of files to load
-		// js: []		<-- If undefined, load the libraries defined in `Router.preloadFiles.default.js`
-		js: [],		//	<-- If empty, DON'T load the libraries defined in `Router.preloadFiles.default.js`
-		// css: []		<-- If undefined, the libraries defined in `Router.preloadFiles.default.css`
-		css: []		//	<-- If empty, DON'T load the libraries defined in `Router.preloadFiles.default.css`
-	} /*, OPTIONAL
-	function ( filePath ) {
-		// Return `true` if library finished initialization
-	} */
-);
-```
-
-**NOTE:** If both `preloadHandler` and route-specific handler in `preload()` method are defined, BOTH will be called unless any of them returns `true`!
-
-Also, to be able to use _meteor-preloader_'s functionality in a specific route, you have to define it as route's controller:
+Also, to be able to use _meteor-preloader_'s functionality in a specific route, you have to define it as route's controller, for example:
 
 ```javascript
 Router.map(function(){
@@ -107,50 +170,64 @@ Router.map(function(){
 ```
 
 
-## Put your code where your mouth is!
+## And now, something completely different!
 
-Ok, because YOU asked for it!
+(Drumroll) Example time!
 
 ```javascript
 Router.configure({
 	layoutTemplate	: 'layout',
 	loadingTemplate	: 'loading',
-	preloadFiles	: {
-		// Use these on *ALL* pages
-		'common'	: {
-			js	: '/library/modernizr/modernizr.js',
-			css	: '/library/icons/fontawesome/assets/css/font-awesome.min.css'
+	preload			: {
+		async	: {
+			// These will be loaded in the background (non-blocking!) once per full page reload
+			'js'		: '/large/files/to/async/preload/humongous_uglyfied.min.js',
+			'handler'	: function ( error, result ) {
+				if ( error ) {
+					console.log( 'Some other time... :(' );
+				} else {
+					console.log( 'Finally! :)' );
+				}
+			}
 		},
-		// Use these (on top of 'common') if no others are defined
-		// These can get overridden by each route's preload controller
-		'default'	: {
-			js	: [],
-			css	: []
-		}
-	},
-	preloadHandler	: function ( filePath ) {
-		var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+		sync	: {
+			'common'	: {
+				// Use these on *ALL* pages
+				css		: '/library/icons/fontawesome/assets/css/font-awesome.min.css',
+				js		: '/library/modernizr/modernizr.js',
+				handler	: function ( filePath ) {
+					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 
-		switch ( file ) {
-			case 'modernizr.js':
-					try {
-						return !!Modernizr;
-					} catch ( error ) {
-						return false;
+					switch ( file ) {
+						case 'modernizr.js':
+								try {
+									return !!Modernizr;
+								} catch ( error ) {
+									return false;
+								}
+							break;
+						default:
+							return true;
 					}
-				break;
-			default:
-				return true;
+				}
+			},
+			'default'	: {
+				// Use these (on top of 'common') if no others are defined
+				// These can get overridden by each route's preload controller
+				js		: [],
+				css		: []/*,		Nothing to handle
+				handler	: function ( filePath ) {}*/
+			}
 		}
 	}
 });
 
-// *NOTE*
-// preloader will NOT block page loading unless:
-// https://github.com/EventedMind/iron-router/issues/554
+/* * NOTE *
+ | meteor-preloader will NOT block page loading unless:
+ | https://github.com/EventedMind/iron-router/issues/554
+ */
 Router.onBeforeAction( 'loading' );
 
-// Main
 Router.map(function(){
 	this.route( 'home', {
 		path			: '/',
@@ -161,11 +238,17 @@ Router.map(function(){
 				to: 'mainContent'
 			}
 		},
-		waitOn			: function () {
-			return this.preload({
-				js: '/plugins/yet_another_fancy_schmancy.js' /*,
-				css: []	<-- No route-specific CSS */
-			}, function ( filePath ) {
+		/* * NOTE *
+		 |
+		 | Old implementation of calling a route controller method `preload()` within route's `waitOn` method is deprecated in v0.3+
+		 |
+		 | Libraries will now be automagically loaded within route's `waitOn` method
+		 |
+		 */
+		preload			: {
+			js		: '/plugins/yet_another_fancy_schmancy.js', /*,
+			css		: [],	<-- No route-specific CSS - use defaults */
+			handler	: function ( filePath ) {
 				var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 
 				switch ( file ) {
@@ -179,7 +262,7 @@ Router.map(function(){
 					default:
 						return true;
 				}
-			});
+			}
 		}
 	});
 });
@@ -188,7 +271,7 @@ Router.map(function(){
 
 ## Oh, no, not again!
 
-Oh yes - you can cache AJAX loading by:
+Oh yes - you can cache AJAX loading (**globally**) by:
 ```javascript
 $.ajaxSetup({
 	cache: true
@@ -196,6 +279,13 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+
+### v0.3.0
+ * **Total rewrite**
+ 	- **changed the parameter structure!**
+ 	- **route controller's `preload` method has been deprecated!**
+ * Added Async loading for large libraries
+ * Now checking (across routes) for already loaded libraries to prevent re-loading
 
 ### v0.2.2
  * Fix for cached status of styles not being correctly set

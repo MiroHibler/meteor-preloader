@@ -9,6 +9,7 @@ Package.on_use( function ( api ) {
 	api.add_files( 'lib/client/route_controller.js', 'client' );
 
 	if ( api.export ) {
+		api.export( 'Preloader', ['client'] );
 		api.export( 'PreloadController', ['client'] );
 	}
 });
