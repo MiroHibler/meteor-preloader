@@ -280,6 +280,11 @@ $.ajaxSetup({
 
 ## Changelog
 
+### v0.3.1
+ * Async loading moved to the end (after sync loading) in order to not to block the page load
+ * Fix for async file counter
+ * Fix for preloader handler's loop
+
 ### v0.3.0
  * **Total rewrite**
  	- **changed the parameter structure!**
