@@ -5,7 +5,7 @@
 Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
 
 
-## NEW VERSION - v0.3.0
+## NEW VERSION - v0.3.X
 
  * **Total rewrite**
  	- **changed the parameter structure!**
@@ -77,7 +77,8 @@ Router.configure({
 		'async': {	// List of files to be loaded asynchronously
 			// These will be loaded in the background (non-blocking!) once per full page reload
 			'js'		: '',	// a string (file path) or an array of strings
-			// (optional) User-defined method called on each _loaded_ library (_initialization_ is NOT guaranteed)
+			// (optional) User-defined method called on each _loaded_ library (_initialization_
+			// is NOT guaranteed)
 			'handler'	: function ( error, result ) {
 					// Check if library finished initialization and have your way with it
 
@@ -106,7 +107,8 @@ Router.configure({
 				// Use these on *ALL* pages
 				'css'		: '',	// a string (file path) or an array of strings
 				'js'		: '',	// a string (file path) or an array of strings
-				// (optional) User-defined method called on each _loaded_ library to check whether it finished _initialization_
+				// (optional) User-defined method called on each _loaded_ library to check whether
+				// it finished _initialization_
 				'handler'	: function ( filePath ) {
 					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 					// Check and return `true` if `file` finished initialization
@@ -117,7 +119,8 @@ Router.configure({
 				// These can get overridden by each route's PreloadController
 				'css'		: '',	// a string (file path) or an array of strings
 				'js'		: '',	// a string (file path) or an array of strings
-				// (optional) User-defined method called on each _loaded_ library to check whether it finished _initialization_
+				// (optional) User-defined method called on each _loaded_ library to check whether
+				// it finished _initialization_
 				'handler'	: function ( filePath ) {
 					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 					// Check and return `true` if `file` finished initialization
@@ -138,16 +141,20 @@ Router.map(function(){
 		controller		: PreloadController,
 		/* * NOTE *
 		 |
-		 | Old implementation of calling a route controller method `preload()` within route's `waitOn` method is deprecated in v0.3+
-		 |
+		 | Old implementation of calling a route controller method `preload()` within
+		 | route's `waitOn` method is deprecated in v0.3+
 		 | Libraries will now be automagically loaded within route's `waitOn` method
 		 |
 		 */
 		preload			: {	// Lists of files to load
-			// 'css		: [],		<-- If undefined, load the libraries defined in `Router.preload.sync.default.css`
-			'css'		: [],		//	<-- If '' or empty, DON'T load the libraries defined in `Router.preload.sync.default.css`
-			// 'js'		: [],		<-- If undefined, load the libraries defined in `Router.preload.sync.default.js`
-			'js'		: [],		//	<-- If '' or empty, DON'T load the libraries defined in `Router.preload.sync.default.js`
+			// 'css		: [],		<-- If undefined, load the libraries defined
+									// in `Router.preload.sync.default.css`
+			'css'		: [],		//	<-- If '' or empty, DON'T load the libraries defined
+									// in `Router.preload.sync.default.css`
+			// 'js'		: [],		<-- If undefined, load the libraries defined
+									// in `Router.preload.sync.default.js`
+			'js'		: [],		//	<-- If '' or empty, DON'T load the libraries defined
+									// in `Router.preload.sync.default.js`
 			'handler'	: function ( filePath ) {
 				var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 				// Check and return `true` if `file` finished initialization
@@ -240,8 +247,8 @@ Router.map(function(){
 		},
 		/* * NOTE *
 		 |
-		 | Old implementation of calling a route controller method `preload()` within route's `waitOn` method is deprecated in v0.3+
-		 |
+		 | Old implementation of calling a route controller method `preload()` within
+		 | route's `waitOn` method is deprecated in v0.3+
 		 | Libraries will now be automagically loaded within route's `waitOn` method
 		 |
 		 */
@@ -279,6 +286,9 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+
+### v0.3.2
+ * Fix README.md comments in examples
 
 ### v0.3.1
  * Async loading moved to the end (after sync loading) in order to not to block the page load
