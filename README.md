@@ -287,6 +287,9 @@ $.ajaxSetup({
 
 ## Changelog
 
+### v0.3.3
+ * Fix for issue #3 - "Preloader fails after the 0.8.3 meteor update"
+
 ### v0.3.2
  * Fix README.md comments in examples
 
