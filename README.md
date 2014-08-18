@@ -5,13 +5,9 @@
 Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
 
 
-## NEW VERSION - v0.3.X
+## NEW VERSION - v0.4
 
- * **Total rewrite**
- 	- **changed the parameter structure!**
- 	- **route controller's `preload` method has been deprecated!**
- * Added Async loading for large libraries
- * Now checking (across routes) for already loaded libraries to prevent re-loading
+ * **Added sync loading to extended controller** - if you extend the PreloadController, you can set its `preload` parameter to the object containing lists of CSS and JavaScript files to load for each route that is using extended controller.
 
 
 ## Dependencies
@@ -39,7 +35,15 @@ To load such files, a usual approach is to use AJAX loader, for example jQuery's
 
 _meteor-preloader's_ main task is to fix that problem.
 
-_**Starting from v0.3.0**_, files now can be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
+###NEW in v0.4.0
+
+If you extend the PreloadController, you can set its `preload` parameter to the object containing lists of CSS and JavaScript files to load for each route that is using extended controller.
+
+**NOTE:** Each route's own `preload` settings will override the extended controller's `preload` settings!
+
+###NEW in v0.3.0
+
+Files now can be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
 
 A handler can be passed to _meteor-preloader_ to be invoked on _**each**_ file being (pre)loaded.
 
@@ -164,14 +168,44 @@ Router.map(function(){
 });
 ```
 
-**NOTE:** If both router- and route-specific handlers are defined, ALL will be called unless any of them returns `true`!
+Similar parameter in the extended controller is now supported as well:
+
+```javascript
+FancyRouteController = PreloadController.extend({
+	// NOTE: Files can be set fixed...
+	preload: {
+		css: [],
+		js : [],
+		handler: function ( filePath ) { return true; }
+	},
+
+	// ...or dinamically if needed
+
+	onRun  : function () {
+		// ONLY in `onRun` event handler!
+		var self = this;
+
+		switch ( self.route.name ) {
+			case 'fancyRoute':
+				self.preload = {
+					css    : [],
+					js     : [],
+					handler: function ( filePath ) { return true; }
+				};
+			default:
+		}
+	}
+}
+```
+
+**NOTE:** If all router-, controller- and route-specific handlers are defined, ALL will be called unless any of them returns `true`!
 
 Also, to be able to use _meteor-preloader_'s functionality in a specific route, you have to define it as route's controller, for example:
 
 ```javascript
 Router.map(function(){
 	this.route( 'home', {
-		controller: PreloadController
+		controller: PreloadController	// or extended controller (ie. FancyRouteController)
 	}
 }
 ```
@@ -235,11 +269,42 @@ Router.configure({
  */
 Router.onBeforeAction( 'loading' );
 
-Router.map(function(){
+AppRouteController = PreloadController.extend({
+	preload	: {
+		js: '/plugins/main_badass.js'
+	},
+
+	onRun	: function () {
+		var self = this;
+
+		switch ( self.route.name ) {
+			case 'badAss':
+				self.preload.js = '/plugins/even_more_badass.js';
+				self.preload.handler = function ( filePath ) {
+					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+
+					switch ( file ) {
+						case 'even_more_badass.js':
+								try {
+									return !!BADASS;
+								} catch ( error ) {
+									return false;
+								}
+							break;
+						default:
+							return true;
+					}
+				};
+			default:
+		}
+	}
+});
+
+Router.map(function () {
 	this.route( 'home', {
 		path			: '/',
 		template		: 'main',
-		controller		: PreloadController,
+		controller		: AppRouteController,
 		yieldTemplates	: {
 			'news': {
 				to: 'mainContent'
@@ -286,6 +351,9 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v0.4.0
+ * Added sync loading to extended controller
+ * Bug Fixes
 
 ### v0.3.3
  * Fix for issue #3 - "Preloader fails after the 0.8.3 meteor update"
