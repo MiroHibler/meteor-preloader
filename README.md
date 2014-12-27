@@ -353,6 +353,9 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v1.0.2
+ * Version bump
+
 ### v1.0.1
  * Specifying a version constraint for iron:router package (@1.0.5)
 
