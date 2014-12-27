@@ -19,7 +19,7 @@ Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
 _preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router) with _**synchronous/asynchronous**_ external file loader with two main functions:
 
  - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files;
- - it can also load files _**asyncronously**_ as well in order to prevent blocking the page load.
+ - it can also load files _**asynchronously**_ in order to prevent blocking the page load and load large libraries in the background to speed up the loading process.
 
 ## What?!
 
@@ -27,11 +27,11 @@ _preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router
 
 That's fine for small (one-page) applications with a few (dozen) custom .js files, but when you're building a large, structured application that has many different screens, like a CMS application for example, things are getting more complicated.
 
-The problem in large applications is that you usually don't want to serve all libraries (.js and .css files) to **ALL** pages. A login page or a user profile page doesn't need fairly large mapping or graph visualization libraries or extensive styling, for example.
+The problem in large applications is that you usually don't want to serve all libraries (.js and .css files) to **ALL** pages. A login page or a user profile page doesn't need fairly large mapping or graph visualization libraries or extensive styling.
 
 Also, to improve the page loading speed and responsiveness, you'd often want to load 3rd party libraries from CDN (or author's server) instead of your own server.
 
-To load such files, a usual approach is to use AJAX loader, for example jQuery's `$.ajax`, or a higher-level alternatives like `$.get()` and `$.load()`. The main problem with those methods is that they work - asynchronously - meaning they _will not block the page loading_, which may be a problem for depending libraries and user defined methods - successful AJAX load doesn't guarantee that the library has finished self-initialization, therefore may not be available to other libraries and custom methods when they load or being invoked.
+To load such files, a usual approach is to use AJAX loader, for example jQuery's `$.ajax`, or a higher-level alternatives like `$.get()` and `$.load()`. The main problem with those methods is that they work _asynchronously_, meaning - they _will not block the page loading_, which may be a problem for depending libraries and user defined methods - successful AJAX load doesn't guarantee that the library has finished self-initialization, therefore may not be available to other libraries and custom methods when they load or being invoked.
 
 _preloader's_ main task is to fix that problem.
 
@@ -47,7 +47,7 @@ If you extend the PreloadController, you can set its `preload` parameter to the 
 
 ### NEW in v0.3.0
 
-Files now can be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
+Files can now be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
 
 A handler can be passed to _preloader_ to be invoked on _**each**_ file being (pre)loaded.
 
@@ -58,7 +58,7 @@ A handler can be passed to _preloader_ to be invoked on _**each**_ file being (p
 _preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router) with _**synchronous/asynchronous**_ external file loader with two main functions:
 
  - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files;
- - it can also load files _**asyncronously**_ as well in order to prevent blocking the page load.
+ - it can also load files _**asyncronously**_ in order to prevent blocking the page load and load large libraries in the background to speed up the loading process.
 
 ## KEWL!
 
@@ -207,7 +207,7 @@ FancyRouteController = PreloadController.extend({
 }
 ```
 
-**NOTE:** If all router-, controller- and route-specific handlers are defined, **ALL** will be called unless any of them returns `true`!
+**NOTE:** If all router-, controller- and route-specific handlers are defined, **ALL** will be called until any of them returns `true` (or 2 seconds period times out)!
 
 Also, to be able to use _preloader_'s functionality in a specific route, you have to define it as route's controller, for example:
 
@@ -353,6 +353,9 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v1.0.3
+ * Docs changes & typos
+
 ### v1.0.2
  * Version bump
 
