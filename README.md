@@ -1,290 +1,242 @@
-# miro:preloader
+# Meteor Preloader
 
 #### A _synchronous/asynchronous_ Meteor preloader for external .js and .css libraries.
 
-Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
+_Preloader_ is to Meteor what **yepnope.js** [was](https://github.com/SlexAxton/yepnope.js#deprecation-notice) to pre-Meteor era.
 
+## NEW VERSION - v1.1
 
-## NEW VERSION - v1.0
-
- * Now compatible with Meteor v1.0
+ * Mostly rewritten to simplify use
 
 ## Dependencies
 
- * [iron:router](https://github.com/eventedmind/iron-router) - _A router that works on the server and the browser, designed specifically for [Meteor](https://github.com/meteor/meteor)_.
+ * [iron:router](https://github.com/eventedmind/iron-router) - _A router that
+works on the server and the browser, designed specifically for [Meteor](https://github.com/meteor/meteor)_.
 
 
 ## TL;DR;
+_Preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router)
+with with two main functions:
 
-_preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router) with _**synchronous/asynchronous**_ external file loader with two main functions:
+ - _**synchronous**_ file loading - after loading the file, and if a user's
+callback method is defined, it will **_block_ the page load**, and _repeatedly_
+call the callback method to check whether the library has finished it's
+initialization - many libraries do internal initialization and even loading their
+own dependencies before being ready. It will stop calling the callback method
+if not getting the positive (boolean true) response from it after 2 seconds, and
+it will continue with the rest of the libraries;
+ - _**asynchronous**_ file loading - in order to prevent blocking the
+page load and load large libraries in the background to speed up the loading
+process. There may be callback method provided as well - it will not block the
+page load but may be used to check for external library's successful
+initialization.
 
- - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files;
- - it can also load files _**asynchronously**_ in order to prevent blocking the page load and load large libraries in the background to speed up the loading process.
 
 ## What?!
 
-[Meteor gathers](http://docs.meteor.com/#structuringyourapp) all JavaScript files in the application tree, with the exception of the _server_, _public_, and _private_ subdirectories, for the client. It minifies this bundle and serves it to each new client.
+[Meteor gathers](http://docs.meteor.com/#structuringyourapp) all JavaScript files
+in the application tree, with the exception of the _server_, _public_, and
+_private_ subdirectories, for the client. It minifies this bundle and serves it
+to each new client.
 
-That's fine for small (one-page) applications with a few (dozen) custom .js files, but when you're building a large, structured application that has many different screens, like a CMS application for example, things are getting more complicated.
+That's fine for small (one-page) applications with a few (dozen) custom .js
+files, but when you're building a large, structured application that has many
+different screens, like a CMS application for example, things are getting more
+complicated.
 
-The problem in large applications is that you usually don't want to serve all libraries (.js and .css files) to **ALL** pages. A login page or a user profile page doesn't need fairly large mapping or graph visualization libraries or extensive styling.
+The problem in large applications is that you usually don't want to serve all
+libraries (.js and .css files) to **ALL** pages. A login page or a user profile
+page doesn't need fairly large mapping or graph visualization libraries or
+extensive styling.
 
-Also, to improve the page loading speed and responsiveness, you'd often want to load 3rd party libraries from CDN (or author's server) instead of your own server.
+Also, to improve the page loading speed and responsiveness, you'd often want to
+load 3rd party libraries from CDN (or author's server) instead of your own
+server.
 
-To load such files, a usual approach is to use AJAX loader, for example jQuery's `$.ajax`, or a higher-level alternatives like `$.get()` and `$.load()`. The main problem with those methods is that they work _asynchronously_, meaning - they _will not block the page loading_, which may be a problem for depending libraries and user defined methods - successful AJAX load doesn't guarantee that the library has finished self-initialization, therefore may not be available to other libraries and custom methods when they load or being invoked.
+To load such files, a usual approach is to use AJAX loader, for example jQuery's
+`$.ajax`, or a higher-level alternatives like `$.get()` and `$.load()`. The main
+problem with those methods is that they work _asynchronously_, meaning - they
+_will not block the page loading_, which may be a problem for depending
+libraries and user defined methods - successful AJAX load doesn't guarantee that
+the library has finished self-initialization, therefore may not be available to
+other libraries and custom methods when they load or being invoked.
 
-_preloader's_ main task is to fix that problem.
+_Preloader's_ main task is to fix that problem.
 
-### NEW in v1.0.0
+> _**NOTE:** **.css**_ files will be just appended to the `<head>` section which
+will cause their immediate loading and they are always loaded asynchronously.
 
-Made compatible with Meteor v1.0.
-
-### NEW in v0.4.0
-
-If you extend the PreloadController, you can set its `preload` parameter to the object containing lists of CSS and JavaScript files to load for each route that is using extended controller.
-
-**NOTE:** Each route's own `preload` settings will override the extended controller's `preload` settings!
-
-### NEW in v0.3.0
-
-Files can now be loaded even _**asyncronously**_ - for example: in case there's a large library that will be needed after user's login, its loading can be initiated at the first initial page load, before the user logs in and it's load will continue until fully loaded regardless of any routes being (re)loaded.
-
-A handler can be passed to _preloader_ to be invoked on _**each**_ file being (pre)loaded.
-
-
-## How?
-(in case you were T(oo) L(azy) even for _TL;DR;_)
-
-_preloader_ extends the [iron:router](https://github.com/EventedMind/iron-router) with _**synchronous/asynchronous**_ external file loader with two main functions:
-
- - after loading the file, and if a user's callback method is defined, it will **_block_ the page load**, and _repeatedly_ call the callback method to check whether the library has finished it's initialization. It will stop calling the callback method if not getting the positive (boolean true) response from it for 2 seconds, and continue with the rest of the files;
- - it can also load files _**asyncronously**_ in order to prevent blocking the page load and load large libraries in the background to speed up the loading process.
 
 ## KEWL!
 
 Yeah! Now, go ahead and type:
 
 ```sh
-$ meteor add miro:preloader
+meteor add miro:preloader
 ```
 
 to add it to your app.
 
+
 ## Bring it on!
 
-_**NOTE:** **.css**_ files will be just appended to the `<head>` section which will cause their immediate loading.
+_Preloader_ adds one method parameter (`preload`) to any or all of the following
+Iron.Router objects:
 
-_preloader_ adds one parameter to the Iron.Router object:
+- **Router.configure** - default options for all routes
 
- * `preload` The object containing two parameters - objects with their own parameters - lists of files to be (pre)loaded on each page, in the order they appear in the list
+- **RouteController** - default options for all routes using that controller
+
+- **Route** - specific options for a particular route
+> If no extended controller has been provided for a particular route, a
+PreloadController itself should be assigned to the route.
+
+To use _Preloader_, add these method parameters to them:
 
 ```javascript
-Router.configure({
-	layoutTemplate	: 'layout',
-	loadingTemplate	: 'loading',
-	preload			: {	// parameters can be a string (file path) or an array of strings
-		'async': {	// List of files to be loaded asynchronously
-			// These will be loaded in the background (non-blocking!) once per full page reload
-			'js'     : '',	// a string (file path) or an array of strings
-			// User-defined method called on each _loaded_ library
-			// to check whether it finished _initialization_ (optional)
-			'handler': function ( error, result ) {
-					// Check if library finished initialization and have your way with it
+'preload': {
 
-					/* error:
-					{
-						file      : <full path of the file being loaded>,
-						jqxhr     : <jqxhr object returned from AJAX call>,
-						status    : <textual status returned from AJAX call>,
-						exception : <exception object returned from AJAX call>,
-						counter   : <current file counter>,
-						totalFiles: <total number of files being loaded>
-					}
+	/*
+	 | Parameters can be a string (file path) or an array of strings
+	 */
 
-					// result:
-					{
-						file      : <full path of the file being loaded>,
-						script    : <file content returned from AJAX call>,
-						status    : <textual status returned from AJAX call>,
-						counter   : <current file counter>,
-						totalFiles: <total number of files being loaded>
-					}
-					*/
-				}
-		},
+	// CSS style(s) to load
+	'styles' : '',	// or []
 
-		'sync': {	// List of files to be loaded synchronously
-			'common' : {	// You can omit any of these objects...
-				// Use these on *ALL* pages
-				'css'    : '',	// a string (file path) or an array of strings
-				'js'     : '',	// a string (file path) or an array of strings
+	// File(s) to be loaded asynchronously (non-blocking)
+	'async'  : '',	// or []
 
-				// User-defined method called on each _loaded_ library to check
-				// whether it finished _initialization_ (optional)
-				'handler': function ( filePath ) {
-					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
-					// Check and return `true` if `file` finished initialization
-				}
-			},
+	// File(s) to be loaded synchronously (blocking)
+	'sync'   : '',	// or []
 
-			'default': {	// ...but omitting both won't make you any smarter.
-				// Use these (on top of 'common') if no others are defined
-				// These can get overridden by each route's PreloadController
-				'css'    : '',	// a string (file path) or an array of strings
-				'js'     : '',	// a string (file path) or an array of strings
-				// User-defined method called on each _loaded_ library to
-				// check whether it finished _initialization_ (optional)
-				'handler': function ( filePath ) {
-					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
-					// Check and return `true` if `file` finished initialization
-				}
-			}
+	// (optional) User-defined method called on each asynchronously
+	// loaded library to check whether it finished initialization
+	'onAsync': function ( error, result ) {
+		// Check if library finished initialization
+		// and have your way with it
+
+		/* error:
+		{
+			file      : <full path of the file being loaded>,
+			jqxhr     : <jqxhr object returned from AJAX call>,
+			status    : <textual status returned from AJAX call>,
+			exception : <exception object returned from AJAX call>,
+			counter   : <current file counter>,
+			totalFiles: <total number of files being loaded>
 		}
+
+		// result:
+		{
+			file      : <full path of the file being loaded>,
+			script    : <file content returned from AJAX call>,
+			status    : <textual status returned from AJAX call>,
+			counter   : <current file counter>,
+			totalFiles: <total number of files being loaded>
+		}
+		*/
+	},
+
+	// (optional) User-defined method called on each synchronously
+	// loaded library to check whether it finished initialization
+	'onSync' : function ( fileName ) {
+		// Check and return `true` if `fileName` finished initialization
+		return true;
 	}
-})
+}
 ```
 
-It also adds similar parameter to the route controller:
+These options are processed by the `PreloadController` - a built-in route
+controller that handles preloading.
+
+It's used in two ways:
+
+ * To be extended for a custom route controller:
 
 ```javascript
+HomeController = PreloadController.extend();
+
 Router.route( '/', {
-	name      : 'home',
-	template  : 'main',
-	controller: PreloadController,
-	/* * NOTE *
-	 |
-	 | Old implementation of calling a route controller method `preload()` within
-	 | route's `waitOn` method is deprecated in v0.3+
-	 | Libraries will now be automagically loaded within route's `waitOn` method
-	 |
-	 */
-	preload   : {	// Lists of files to load
-		// 'css  : [],		<-- If undefined, load the libraries defined
-								// in `Router.preload.sync.default.css`
-		'css'    : [],		//	<-- If '' or empty, DON'T load the libraries defined
-								// in `Router.preload.sync.default.css`
-		// 'js'  : [],		<-- If undefined, load the libraries defined
-								// in `Router.preload.sync.default.js`
-		'js'     : [],		//	<-- If '' or empty, DON'T load the libraries defined
-								// in `Router.preload.sync.default.js`
-		'handler': function ( filePath ) {
-			var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
-			// Check and return `true` if `file` finished initialization
-		}
-	}
+	name: 'home'
 });
 ```
 
-Similar parameter in the extended controller is now supported as well:
+or
 
-```javascript
-FancyRouteController = PreloadController.extend({
-	// NOTE: Files can be set fixed...
-	preload: {
-		css    : [],
-		js     : [],
-		handler: function ( filePath ) { return true; }
-	},
-
-	// ...or dynamic as needed
-
-	onRun  : function () {
-		// ONLY in `onRun` event handler!
-		var self = this,
-			routeName = self.route.getName();
-
-		switch ( routeName ) {
-			case 'fancyRoute':
-				self.preload = {
-					css    : [],
-					js     : [],
-					handler: function ( filePath ) { return true; }
-				};
-			default:
-				// Whatever goes on with other routes
-		}
-	}
-}
-```
-
-**NOTE:** If all router-, controller- and route-specific handlers are defined, **ALL** will be called until any of them returns `true` (or 2 seconds period times out)!
-
-Also, to be able to use _preloader_'s functionality in a specific route, you have to define it as route's controller, for example:
+ * To be assigned to the Route directly:
 
 ```javascript
 Router.route( '/', {
-	controller: PreloadController	// or extended controller (ie. FancyRouteController)
-}
+	controller: 'PreloadController'
+});
 ```
+
+We might have some options defined globally with Router.configure, some options
+defined on the Route and some options defined on the RouteController.
+_Preloader_ looks up options in this order:
+
+1. Route
+1. RouteController
+1. Router
 
 
 ## And now, something completely different!
 
-(Drumroll) Example time!
+(Drumroll...) Example time!
 
 ```javascript
 Router.configure({
 	layoutTemplate : 'layout',
 	loadingTemplate: 'loading',
-	preload        : {
-		async: {
-			// These will be loaded in the background (non-blocking!) once per full page reload
-			'js'		: '/large/files/to/async/preload/humongous_uglyfied.min.js',
-			'handler'	: function ( error, result ) {
-				if ( error ) {
-					console.log( 'Some other time... :(' );
-				} else {
-					console.log( 'Finally! :)' );
-				}
+
+	/*
+	 | Options declared on the extended PreloadController and route
+	 | will override these default Router options!
+	 */
+	'preload': {
+		'styles' : '/library/icons/fontawesome/assets/css/font-awesome.css',
+		'async'  : '/large/files/to/async/preload/humongous.js',
+		'sync'   : '/library/modernizr/modernizr.js',
+		'onAsync': function ( error, result ) {
+			if ( error ) {
+				console.log( 'Some other time... :(' );
+			} else {
+				console.log( 'Finally! :)' );
 			}
 		},
+		'onSync' : function ( filePath ) {
+			var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 
-		sync : {
-			'common' : {
-				// Use these on *ALL* pages
-				css    : '/library/icons/fontawesome/assets/css/font-awesome.min.css',
-				js     : '/library/modernizr/modernizr.js',
-				handler: function ( filePath ) {
-					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
-
-					switch ( file ) {
-						case 'modernizr.js':
-								try {
-									return !!Modernizr;
-								} catch ( error ) {
-									return false;
-								}
-							break;
-						default:
-							return true;
-					}
-				}
-			},
-
-			'default': {
-				// Use these (on top of 'common') if no others are defined
-				// These can get overridden by each route's preload controller
-				js     : [],
-				css    : []/*,		Nothing to handle
-				handler: function ( filePath ) {}*/
+			switch ( file ) {
+				case 'modernizr.js':
+						try {
+							return !!Modernizr;
+						} catch ( error ) {
+							return false;
+						}
+					break;
+				default:
+					return true;
 			}
 		}
 	}
 });
 
 AppRouteController = PreloadController.extend({
-	preload: {
-		js: '/plugins/main_badass.js'
+	/*
+	 | Options declared on the route will override these options!
+	 */
+	'preload': {
+		'async': '/plugins/main_badass.js'
 	},
 
-	onRun  : function () {
+	onBeforeAction: function () {
 		var self = this,
 			routeName = self.route.getName();
 
 		switch ( routeName ) {
 			case 'badAss':
-				self.preload.js = '/plugins/even_more_badass.js';
-				self.preload.handler = function ( filePath ) {
+				self.preload.sync = '/plugins/even_more_badass.js';
+				self.preload.onSync = function ( filePath ) {
 					var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 
 					switch ( file ) {
@@ -300,6 +252,7 @@ AppRouteController = PreloadController.extend({
 					}
 				};
 			default:
+				// Whatever goes on with other routes
 		}
 	}
 });
@@ -307,23 +260,25 @@ AppRouteController = PreloadController.extend({
 Router.route( '/', {
 	name          : 'home',
 	template      : 'main',
-	controller    : AppRouteController,
 	yieldTemplates: {
 		'news': {
 			to: 'mainContent'
 		}
 	},
-	/* * NOTE *
-	 |
-	 | Old implementation of calling a route controller method `preload()` within
-	 | route's `waitOn` method is deprecated in v0.3+
-	 | Libraries will now be automagically loaded within route's `waitOn` method
-	 |
+
+	/*
+	 | If no extended controller has been provided for a particular route,
+	 | a PreloadController itself should be assigned to the route
 	 */
-	preload: {
-		js     : '/plugins/yet_another_fancy_schmancy.js', /*,
-		css    : [],	<-- No route-specific CSS - use defaults */
-		handler: function ( filePath ) {
+	controller: AppRouteController,
+
+	/*
+	 | Options declared on the route will override
+	 | extended PreloadController and global options!
+	 */
+	'preload': {
+		'sync'  : '/plugins/yet_another_fancy_schmancy.js',
+		'onSync': function ( filePath ) {
 			var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
 
 			switch ( file ) {
@@ -345,7 +300,7 @@ Router.route( '/', {
 
 ## Oh, no, not again!
 
-Oh yes - you can cache AJAX loading (**globally**) by:
+Oh yes - you can speed up loading by caching AJAX loading (**globally**) with:
 ```javascript
 $.ajaxSetup({
 	cache: true
@@ -353,6 +308,10 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v1.1.0
+ * Rewritten again - simplified API
+ * Bug fixes
+
 ### v1.0.3
  * Docs changes & typos
 
@@ -366,8 +325,13 @@ $.ajaxSetup({
  * Now compatible with Meteor v1.0
 
 ### v0.4.0
- * **Added sync loading to extended controller** - if you extend the PreloadController, you can set its `preload` parameter to the object containing lists of CSS and JavaScript files to load for each route that is using extended controller.
+ * **Added sync loading to extended controller** - if you extend the
+PreloadController, you can set its `preload` parameter to the object containing
+lists of CSS and JavaScript files to load for each route that is using extended
+controller.
  * Bug Fixes
+**NOTE:** Each route's own `preload` settings will override the extended
+controller's `preload` settings!
 
 ### v0.3.3
  * Fix for issue #3 - "Preloader fails after the 0.8.3 meteor update"
@@ -376,25 +340,34 @@ $.ajaxSetup({
  * Fix README.md comments in examples
 
 ### v0.3.1
- * Async loading moved to the end (after sync loading) in order to not to block the page load
+ * Async loading moved to the end (after sync loading) in order to not to block
+the page load
  * Fix for async file counter
  * Fix for preloader handler's loop
 
 ### v0.3.0
  * **Total rewrite**
- 	- **changed the parameter structure!**
- 	- **route controller's `preload` method has been deprecated!**
+	- **changed the parameter structure!**
+	- **route controller's `preload` method has been deprecated!**
  * Added Async loading for large libraries
+	- for example: in case there's a large library that will be needed after
+	user's login, its loading can be initiated at the first initial page load,
+	before the user logs in and it's load will continue until fully loaded
+	regardless of any routes being (re)loaded
+	- a handler can be passed to _miro:preloader_ to be invoked on _**each**_ file
+	being (pre)loaded
  * Now checking (across routes) for already loaded libraries to prevent re-loading
 
 ### v0.2.2
  * Fix for cached status of styles not being correctly set
 
 ### v0.2.1
- * Cached status so styles as well don't get loaded again for the same route (until full page reload, duh!)
+ * Cached status so styles as well don't get loaded again for the same route
+(until full page reload, duh!)
 
 ### v0.2.0
- * Cached status so libraries don't get loaded again for the same route (until full page reload, duh!)
+ * Cached status so libraries don't get loaded again for the same route (until
+full page reload, duh!)
 
 ### v0.1.3
  * Bumped up version in `smart.js`
@@ -409,8 +382,14 @@ $.ajaxSetup({
 ### v0.1.0
  * Initial release
 
+
+## Acknowledgements
+
+Inspired by [wait-on-lib](https://github.com/DerMambo/wait-on-lib)
+
+
 ## Copyright and license
 
-Copyright © 2014 [Miroslav Hibler](http://miro.hibler.me)
+Copyright © 2014-2015 [Miroslav Hibler](http://miro.hibler.me)
 
 _miro:preloader_ is licensed under the [**MIT**](http://miro.mit-license.org) license.

@@ -1,14 +1,14 @@
 Package.describe({
 	name   : 'miro:preloader',
 	summary: 'A synchronous/asynchronous Meteor preloader for external .js and .css libraries',
-	version: '1.0.3',
+	version: '1.1.0',
 	git    : 'https://github.com/MiroHibler/meteor-preloader.git'
 });
 
 Package.on_use( function ( api ) {
 
 	api.use(
-		'iron:router@1.0.6', 'client'
+		'iron:router@1.0.7', 'client'
 	);
 
 	api.add_files( 'lib/client/route_controller.js', 'client' );
