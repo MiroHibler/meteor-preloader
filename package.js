@@ -7,7 +7,7 @@ Package.describe({
 
 Package.on_use( function ( api ) {
 
-	api.use( 'iron:router', ['server', 'client'] );
+	api.use( 'iron:router@1.0.0', ['server', 'client'] );
 
 	api.add_files( 'lib/server_route_controller.js', 'server' );
 	api.add_files( 'lib/client_route_controller.js', 'client' );
