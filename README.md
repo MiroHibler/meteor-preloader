@@ -1,12 +1,14 @@
 # Meteor Preloader
 
-#### A _synchronous/asynchronous_ Meteor preloader for external .js and .css libraries.
+#### A Meteor "_lazy-loader_" for external .js and .css libraries
 
 _Preloader_ is to Meteor what **yepnope.js** [was](https://github.com/SlexAxton/yepnope.js#deprecation-notice) to pre-Meteor era.
 
-## NEW VERSION - v1.1
+## NEW VERSION - v1.2
 
- * Mostly rewritten to simplify use
+ * Extended to server side (only to prevent errors if ran on server)
+ * Some new methods added - library/event handlers
+
 
 ## Dependencies
 
@@ -100,6 +102,9 @@ To use _Preloader_, add these method parameters to them:
 	 | Parameters can be a string (file path) or an array of strings
 	 */
 
+	// Custom time-out to replace internal 2 seconds
+	'timeOut': 5000,	// milliseconds
+
 	// CSS style(s) to load
 	'styles' : '',	// or []
 
@@ -108,6 +113,13 @@ To use _Preloader_, add these method parameters to them:
 
 	// File(s) to be loaded synchronously (blocking)
 	'sync'   : '',	// or []
+
+	// (optional) User-defined method called BEFORE each asynchronously
+	// loaded library to allow additional processing
+	'onBeforeAsync': function ( fileName ) {
+		// Return 'true' to continue normally, otherwise skip library
+		return true;
+	},
 
 	// (optional) User-defined method called on each asynchronously
 	// loaded library to check whether it finished initialization
@@ -136,10 +148,33 @@ To use _Preloader_, add these method parameters to them:
 		*/
 	},
 
+	// (optional) User-defined method called AFTER each asynchronously
+	// loaded library to allow additional processing
+	'onAfterAsync': function ( fileName ) {
+		// Return 'true' to continue normally,
+		// otherwise don't mark library as loaded
+		return true;
+	},
+
+	// (optional) User-defined method called BEFORE each synchronously
+	// loaded library to allow additional processing
+	'onBeforeSync': function ( fileName ) {
+		// Return 'true' to continue normally, otherwise skip library
+		return true;
+	},
+
 	// (optional) User-defined method called on each synchronously
 	// loaded library to check whether it finished initialization
 	'onSync' : function ( fileName ) {
 		// Check and return `true` if `fileName` finished initialization
+		return true;
+	},
+
+	// (optional) User-defined method called AFTER each synchronously
+	// loaded library to allow additional processing
+	'onAfterSync': function ( fileName ) {
+		// Return 'true' to continue normally,
+		// otherwise don't mark library as loaded
 		return true;
 	}
 }
@@ -166,7 +201,7 @@ or
 
 ```javascript
 Router.route( '/', {
-	controller: 'PreloadController'
+	controller: PreloadController	// or 'PreloadController'
 });
 ```
 
@@ -184,6 +219,12 @@ _Preloader_ looks up options in this order:
 (Drumroll...) Example time!
 
 ```javascript
+var routePath = 'http://js.arcgis.com/3.12/',
+	routeLoaded = false,
+	loadHandler = function () {
+		routeLoaded = true;
+	};
+
 Router.configure({
 	layoutTemplate : 'layout',
 	loadingTemplate: 'loading',
@@ -193,9 +234,13 @@ Router.configure({
 	 | will override these default Router options!
 	 */
 	'preload': {
+		'timeOut': 5000,  // wait 5s for our humongous library to finish loading
 		'styles' : '/library/icons/fontawesome/assets/css/font-awesome.css',
 		'async'  : '/large/files/to/async/preload/humongous.js',
-		'sync'   : '/library/modernizr/modernizr.js',
+		'sync'   : [
+			routePath,
+			'/library/modernizr/modernizr.js'
+		],
 		'onAsync': function ( error, result ) {
 			if ( error ) {
 				console.log( 'Some other time... :(' );
@@ -203,10 +248,31 @@ Router.configure({
 				console.log( 'Finally! :)' );
 			}
 		},
-		'onSync' : function ( filePath ) {
-			var file = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+		'onBeforeSync': function ( fileName ) {
+			if ( fileName === routePath ) {
+				// Our ArcGis library requires special treatment:
+				var script    = document.createElement( 'script' );
 
-			switch ( file ) {
+				script.rel    = 'preload javascript';
+				script.type   = 'text/javascript';
+				script.src    = routePath;
+				script.onload = loadHandler;
+
+				document.body.appendChild( script );
+
+				// No need to continue normally...
+				return false;
+			}
+		},
+		'onSync' : function ( filePath ) {
+			if ( routeLoaded && filePath === routePath ) {
+				// Check for Dojo
+				return !!require && !!define;
+			}
+			// Else...
+			var fileName = filePath.replace( /\?.*$/,"" ).replace( /.*\//,"" );
+
+			switch ( fileName ) {
 				case 'modernizr.js':
 						try {
 							return !!Modernizr;
@@ -217,6 +283,11 @@ Router.configure({
 				default:
 					return true;
 			}
+		},
+		'onAfterSync': function ( fileName ) {
+			// We'll probably want to reload the main
+			// library, so don't mark it cached
+			return false;
 		}
 	}
 });
@@ -308,6 +379,13 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v1.2.0
+ * Extended to server side (only to prevent errors if ran on server)
+ * Some new methods - library/event handlers
+ * Reinstated verbose logging
+ * Bug fixes
+ * Clean up
+
 ### v1.1.0
  * Rewritten again - simplified API
  * Bug fixes
