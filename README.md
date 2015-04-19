@@ -4,10 +4,9 @@
 
 _Preloader_ is to Meteor what **yepnope.js** [was](https://github.com/SlexAxton/yepnope.js#deprecation-notice) to pre-Meteor era.
 
-## NEW VERSION - v1.2
+## NEW VERSION - v1.2.1
 
- * Extended to server side (only to prevent errors if ran on server)
- * Some new methods added - library/event handlers
+ * Logging in console may now be controlled by the flag
 
 
 ## Dependencies
@@ -101,6 +100,9 @@ To use _Preloader_, add these method parameters to them:
 	/*
 	 | Parameters can be a string (file path) or an array of strings
 	 */
+
+	// Added in v1.2.1 - this one works only in Router.Configure!
+	'verbose': true,  // Show loading messages in console
 
 	// Custom time-out to replace internal 2 seconds
 	'timeOut': 5000,	// milliseconds
@@ -234,6 +236,9 @@ Router.configure({
 	 | will override these default Router options!
 	 */
 	'preload': {
+		// Added in v1.2.1 - this one works only in Router.Configure!
+		'verbose': true,  // Show loading messages in console
+
 		'timeOut': 5000,  // wait 5s for our humongous library to finish loading
 		'styles' : '/library/icons/fontawesome/assets/css/font-awesome.css',
 		'async'  : '/large/files/to/async/preload/humongous.js',
@@ -379,6 +384,11 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+### v1.2.1
+ * Logging in console may now be controlled by the flag (addresses #12)
+ * Bug fixes (CSS loading)
+ * Clean up
+
 ### v1.2.0
  * Extended to server side (only to prevent errors if ran on server)
  * Some new methods - library/event handlers
