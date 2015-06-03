@@ -1,7 +1,7 @@
 Package.describe({
 	name   : 'miro:preloader',
 	summary: 'A Meteor "lazy-loader" for external .js and .css libraries',
-	version: '1.2.1',
+	version: '1.2.2',
 	git    : 'https://github.com/MiroHibler/meteor-preloader.git'
 });
 
