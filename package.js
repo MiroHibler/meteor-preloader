@@ -7,9 +7,10 @@ Package.describe({
 
 Package.onUse( function ( api ) {
 
-	api.use( 'underscore', [ 'server', 'client' ] );
-
-	api.use( 'iron:router@1.0.0', [ 'server', 'client' ] );
+	api.use([
+		'underscore@1.0.3',
+		'iron:router@1.0.0'
+	], [ 'server', 'client' ] );
 
 	api.addFiles( 'lib/server_route_controller.js', 'server' );
 	api.addFiles( 'lib/client_route_controller.js', 'client' );
