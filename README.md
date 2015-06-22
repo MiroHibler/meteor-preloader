@@ -4,9 +4,9 @@
 
 _Preloader_ is to Meteor what **yepnope.js** [was](https://github.com/SlexAxton/yepnope.js#deprecation-notice) to pre-Meteor era.
 
-## NEW VERSION - v1.2.2
+## NEW VERSION - v1.2.3
 
- * Logging in console throwing errors in unsupported browsers prevented
+ * Various bug fixes
 
 
 ## Dependencies
@@ -384,6 +384,9 @@ $.ajaxSetup({
 ```
 
 ## Changelog
+
+### v1.2.3
+ * Various bug fixes (fixes #18 & #19)
 
 ### v1.2.2
  * Logging in console throwing errors in unsupported browsers prevented (fixed by #21)

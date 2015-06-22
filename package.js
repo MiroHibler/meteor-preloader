@@ -1,11 +1,13 @@
 Package.describe({
 	name   : 'miro:preloader',
 	summary: 'A Meteor "lazy-loader" for external .js and .css libraries',
-	version: '1.2.2',
+	version: '1.2.3',
 	git    : 'https://github.com/MiroHibler/meteor-preloader.git'
 });
 
 Package.onUse( function ( api ) {
+
+	api.use( 'underscore', [ 'server', 'client' ] );
 
 	api.use( 'iron:router@1.0.0', [ 'server', 'client' ] );
 
